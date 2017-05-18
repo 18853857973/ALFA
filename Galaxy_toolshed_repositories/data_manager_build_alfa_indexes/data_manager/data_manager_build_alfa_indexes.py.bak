@@ -3,7 +3,7 @@
 import sys
 import shutil
 import re
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 import subprocess
 import gzip
 import os
@@ -24,20 +24,20 @@ def cleanup_before_exit(tmp_dir):
         shutil.rmtree(tmp_dir)
 
 def get_page_content(url):
-    req = urllib.request.Request(url)
-    page = urllib.request.urlopen(req)
+    req = urllib2.Request(url)
+    page = urllib2.urlopen(req)
     return page.read()
 
 def download_file(link, local_file_name):
-    req = urllib.request.Request(link)
-    src_file = urllib.request.urlopen(req)
+    req = urllib2.Request(link)
+    src_file = urllib2.urlopen(req)
     local_file = open(local_file_name, 'wb')
     local_file.write(src_file.read())
     local_file.close()
 
 def uncompress_gz(gz_file_name, uncompressed_file_name):
     print("____________________________________________________________")
-    print(("*** Uncompressing %s" % gz_file_name))
+    print("*** Uncompressing %s" % gz_file_name)
     uncompressed_file = open(uncompressed_file_name, 'wb')
     with gzip.open(gz_file_name, 'rb') as src_file:
         uncompressed_file.write(src_file.read())
@@ -72,7 +72,7 @@ def test_ensembl_species_exists(kingdom, url, species_name):
     if the species_name matches several strings, then an error is printed with all the possible species to enter for a new run
     """
     print("____________________________________________________________")
-    print(("*** Testing whether %s is referenced in Ensembl %s" % (species_name, kingdom)))
+    print ("*** Testing whether %s is referenced in Ensembl %s" % (species_name, kingdom))
     list_species_file_name = 'species_Ensembl%s%s.txt' % (kingdom[0].upper(), kingdom[1:])
     if kingdom=='vertebrates':
         download_file(url, list_species_file_name)
@@ -98,7 +98,7 @@ def test_ensembl_species_exists(kingdom, url, species_name):
             columns = species_lines[0].split('\t')
             found_species_name = columns[1]
         if species_name != found_species_name:
-            print(('-> \'%s\' has been replace with the complete species name \'%s\'' % (species_name, found_species_name)))
+            print('-> \'%s\' has been replace with the complete species name \'%s\'' % (species_name, found_species_name))
             return found_species_name, species_lines_matched
         print("-> Referenced !\n")
         return species_name, species_lines_matched
@@ -123,18 +123,18 @@ def test_ensembl_species_exists(kingdom, url, species_name):
         sys.exit(msg)
 
 def get_ensembl_collection(kingdom, species_line):
-    print(("*** Extracting the %s_collection of the species" % kingdom))
+    print("*** Extracting the %s_collection of the species" % kingdom)
     collection_regex = re.compile('%s_.+_collection' % kingdom.lower())
     collection_match = re.search(collection_regex, species_line)
     if not collection_match:
-        print(("-> Skiped: this species is not classified in a Ensembl %s collection\n" % kingdom))
+        print("-> Skiped: this species is not classified in a Ensembl %s collection\n" % kingdom)
         return None
     print("-> Extracted !\n")
     return collection_match.group(0)
 
 def get_ensembl_gtf_archive_name(url_dir, species_name):
     print("____________________________________________________________")
-    print(("*** Extracting the gtf archive name of %s" % species_name))
+    print("*** Extracting the gtf archive name of %s" % species_name)
     gtf_archive_regex = re.compile('%s\..*\.[0-9]+\.gtf\.gz' % species_name, flags = re.IGNORECASE)
     dir_content = get_page_content(url_dir)
     gtf_archive_match = re.search(gtf_archive_regex, dir_content)
@@ -154,20 +154,20 @@ def get_ensembl_gtf_archive(kingdom, url, species_name, species_line):
     final_url = url + species_name + '/'
     gtf_archive_name = get_ensembl_gtf_archive_name(final_url, species_name)
     print("____________________________________________________________")
-    print(("*** Download the gtf archive of %s" % species_name))
+    print("*** Download the gtf archive of %s" % species_name)
     download_file(final_url + gtf_archive_name, gtf_archive_name)
     print("-> Downloaded !\n")
     return gtf_archive_name
 
 def generate_alfa_indexes(path_to_alfa, gtf_file_name):
     print("____________________________________________________________")
-    print(("*** Generating alfa indexes from %s" % gtf_file_name))
+    print("*** Generating alfa indexes from %s" % gtf_file_name)
     alfa_result = subprocess.Popen(['python', path_to_alfa, '-a',  gtf_file_name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     alfa_out, alfa_err = alfa_result.communicate()
     if alfa_err != None and not re.search('### End of program', alfa_err):
         msg = 'Generation Failed due an alfa error: %s' % (alfa_err)
         sys.exit(msg)
-    print(("Alfa prompt:\n%s" % alfa_out))
+    print("Alfa prompt:\n%s" % alfa_out)
     print("-> Generated !\n")
 
 def get_data_table_new_entry(gtf_archive_name):
@@ -221,14 +221,14 @@ def main():
 
     print("____________________________________________________________")
     print("*** General Info")
-    print(("URL ROOT:\t%s" % url))
-    print(("SPECIES:\t%s" % data_table_entry['species']))
-    print(("VERSION:\t%s" % data_table_entry['version']))
-    print(("RELEASE:\t%s" % data_table_entry['release']))
-    print(("VALUE:\t%s" % data_table_entry['value']))
-    print(("DBKEY:\t%s" % data_table_entry['dbkey']))
-    print(("NAME:\t%s" % data_table_entry['name']))
-    print(("PREFIX:\t%s" % data_table_entry['prefix']))
+    print("URL ROOT:\t%s" % url)
+    print("SPECIES:\t%s" % data_table_entry['species'])
+    print("VERSION:\t%s" % data_table_entry['version'])
+    print("RELEASE:\t%s" % data_table_entry['release'])
+    print("VALUE:\t%s" % data_table_entry['value'])
+    print("DBKEY:\t%s" % data_table_entry['dbkey'])
+    print("NAME:\t%s" % data_table_entry['name'])
+    print("PREFIX:\t%s" % data_table_entry['prefix'])
 
     shutil.copyfile(stranded_index_name, os.path.join(target_directory, stranded_index_name))
     shutil.copyfile(unstranded_index_name, os.path.join(target_directory, unstranded_index_name))

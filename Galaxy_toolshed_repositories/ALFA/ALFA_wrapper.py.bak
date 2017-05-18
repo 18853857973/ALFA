@@ -35,7 +35,7 @@ def get_arg():
     parser.add_argument('--output_count', dest='output_count', action='store', nargs=1, metavar='output_count_filename', type=str)
     parser.add_argument('--output_index', dest='output_indexes', action='store', nargs=2, metavar=('output_stranded_index_filename', 'output_unstranded_index_filename'), type=str)
     #Output Options
-    parser.add_argument('--categories_depth', dest='categories_depth', action='store', nargs=1, default=[3], choices=list(range(1,5)), metavar='categories_depth', type=int)
+    parser.add_argument('--categories_depth', dest='categories_depth', action='store', nargs=1, default=[3], choices=range(1,5), metavar='categories_depth', type=int)
     parser.add_argument('--plot_format', dest='plot_format', action='store', nargs=1, choices=['pdf', 'png', 'svg'], metavar='plot_format', type=str)
     parser.add_argument('--threshold', dest='threshold', action='store', nargs=2, metavar=('yMin', 'yMax'), type=float)
     #Internal variables
@@ -166,7 +166,7 @@ def main():
     if args.output_indexes:
         if args.annotation_file:
             indexes_regex = re.compile('.*\.index')
-            indexes = list(filter(indexes_regex.search, os.listdir('.')))
+            indexes = filter(indexes_regex.search, os.listdir('.'))
             indexes.sort()
             shutil.move(indexes[0], args.output_indexes[0])
             shutil.move(indexes[1], args.output_indexes[1])
